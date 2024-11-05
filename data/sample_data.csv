@@ -1,0 +1,101 @@
+id,name,age,city
+1,David,34,Chicago
+2,Alice,26,Phoenix
+3,Bob,26,Houston
+4,Charlie,39,Chicago
+5,Eva,20,New York
+6,Eva,37,Houston
+7,David,26,Los Angeles
+8,Charlie,37,Los Angeles
+9,Charlie,20,New York
+10,Bob,30,Phoenix
+11,Alice,20,Phoenix
+12,David,30,Phoenix
+13,Eva,37,Chicago
+14,Alice,30,New York
+15,Charlie,28,Chicago
+16,Eva,33,Los Angeles
+17,Bob,33,Houston
+18,Eva,29,Chicago
+19,Bob,27,New York
+20,Eva,28,Chicago
+21,David,35,New York
+22,Alice,38,Houston
+23,Bob,36,Chicago
+24,David,38,Chicago
+25,Charlie,20,New York
+26,Bob,39,New York
+27,Bob,30,Los Angeles
+28,Bob,30,New York
+29,Bob,29,Phoenix
+30,Eva,34,Phoenix
+31,Bob,37,Phoenix
+32,Alice,28,Houston
+33,Bob,38,Chicago
+34,Eva,22,Los Angeles
+35,Eva,22,Chicago
+36,Alice,21,New York
+37,David,27,Houston
+38,Bob,32,New York
+39,David,38,Los Angeles
+40,Eva,20,Houston
+41,Charlie,36,Phoenix
+42,Alice,34,Phoenix
+43,Alice,27,New York
+44,Eva,28,New York
+45,Bob,31,New York
+46,Alice,21,New York
+47,Bob,26,Los Angeles
+48,Bob,21,Houston
+49,David,21,Los Angeles
+50,Eva,35,Chicago
+51,Bob,38,Los Angeles
+52,Eva,25,New York
+53,Eva,37,Houston
+54,Bob,20,Chicago
+55,Bob,31,Chicago
+56,David,34,Los Angeles
+57,David,29,Phoenix
+58,David,38,Los Angeles
+59,Bob,37,Phoenix
+60,Alice,22,Chicago
+61,Eva,28,Chicago
+62,Charlie,20,New York
+63,Alice,37,New York
+64,Charlie,26,Los Angeles
+65,Charlie,32,New York
+66,Alice,34,New York
+67,Alice,26,Los Angeles
+68,Charlie,28,Los Angeles
+69,Eva,20,Chicago
+70,David,39,New York
+71,Charlie,34,New York
+72,Alice,36,Houston
+73,Alice,37,Houston
+74,Bob,36,Los Angeles
+75,Eva,33,Houston
+76,Bob,28,Houston
+77,Bob,27,Phoenix
+78,Charlie,32,Chicago
+79,Charlie,26,Houston
+80,Alice,22,New York
+81,Charlie,26,Los Angeles
+82,Alice,25,New York
+83,Alice,21,Los Angeles
+84,Bob,38,Phoenix
+85,Alice,33,New York
+86,Eva,21,Houston
+87,Eva,31,Chicago
+88,Charlie,39,Los Angeles
+89,Alice,29,Chicago
+90,David,25,New York
+91,Eva,35,Houston
+92,Eva,28,Phoenix
+93,Alice,27,Los Angeles
+94,Alice,27,Phoenix
+95,Charlie,32,Houston
+96,David,32,Los Angeles
+97,David,30,New York
+98,Charlie,24,Houston
+99,Bob,30,Houston
+100,Bob,25,Los Angeles
