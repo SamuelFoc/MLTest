@@ -24,10 +24,10 @@ class ReadData(DataImportComponent):
         # Read data based on the file type
         if file_type == 'csv':
             return pl.read_csv(self.src)
-        elif file_type == 'parquet':
+        elif file_type == 'pq':
             return pl.read_parquet(self.src)
         elif file_type == 'json':
             return pl.read_json(self.src)
         else:
-            raise ValueError(f"Unsupported file type '{file_type}'. Supported types: csv, parquet, json.")
+            raise ValueError(f"Unsupported file type '{file_type}'. Supported types: csv, pq, json.")
         
