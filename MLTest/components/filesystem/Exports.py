@@ -31,4 +31,6 @@ class ExportData(DataExportComponent):
         elif file_type == 'json':
             data.write_json(self.save_to)
         else:
-            raise ValueError(f"Unsupported file format '{file_type}'. Supported formats: csv, parquet, json.")
+            raise ValueError(f"Unsupported file format '{file_type}'. Supported formats: csv, pq, json.")
+        
+        return data
