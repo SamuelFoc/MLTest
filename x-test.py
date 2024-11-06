@@ -1,8 +1,3 @@
-from MLTest.components.piping.Loaders import PipeLoader
+from tests.test_1 import test_1
 
-
-loader = PipeLoader("pipes")
-
-MergeDataPipe = loader.load_pipeline("MergeDataPipe")
-
-merged_data = MergeDataPipe.run()
+test_1()
