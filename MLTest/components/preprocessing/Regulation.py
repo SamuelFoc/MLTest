@@ -1,10 +1,10 @@
-from MLTest.interfaces.Components import FlowComponent
-from MLTest.interfaces.Typing import DF, LIST
+from MLTest.interfaces.Components import AggregatorComponent
+from MLTest.interfaces.Typing import DF
 from typing import List
 import polars as pl
 
 
-class MergeStorage(FlowComponent):
+class MergeStorage(AggregatorComponent):
     """
     A component that accepts an array of dataframes and merges them into a single dataframe.
     """
@@ -32,7 +32,7 @@ class MergeStorage(FlowComponent):
         else:
             raise ValueError(f"Unsupported merge method '{how}'. Use 'concat' or 'join-[type]' where [type] is inner, outer, left, or right.")
 
-    def use(self, dataframes: List[DF]) -> DF:
+    def use(self, data: List[DF]) -> DF:
         """
         Merges the provided dataframes based on the specified method during initialization.
 
@@ -43,15 +43,15 @@ class MergeStorage(FlowComponent):
         - pl.DataFrame: The merged dataframe.
         """
         # Ensure that all elements in `dataframes` are of type `pl.DataFrame`
-        if not all(isinstance(df, DF) for df in dataframes):
-            raise TypeError("All items in `dataframes` must be Polars DataFrame instances.")
+        if not all(isinstance(df, DF) for df in data):
+            raise TypeError("All items in `data` must be Polars DataFrame instances.")
 
         if self.how == "concat":
             # Concatenate dataframes vertically (stack them)
-            return pl.concat(dataframes)
+            return pl.concat(data)
         else:
             # Perform the join on the specified key
-            result = dataframes[0]
-            for df in dataframes[1:]:
+            result = data[0]
+            for df in data[1:]:
                 result = result.join(df, on=self.on, how=self.how)
             return result
