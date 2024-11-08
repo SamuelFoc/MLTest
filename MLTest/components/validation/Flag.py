@@ -36,9 +36,14 @@ class ValidateOrFlag(FlowComponent):
         Raises:
         - ValueError: If the condition is met and raise_exception is True.
         """
+        self.log("Starting validation check.", level="INFO")
+        
         if self.condition(data):
+            self.log(f"Condition met: {self.message}", level="WARNING")
             if self.raise_exception:
+                self.log("Raising an exception due to condition being met.", level="ERROR")
                 raise ValueError(self.message)
-            if self.log_enabled:
-                self.log(f"ValidationComponent: {self.message}")
+        else:
+            self.log("Condition not met. Validation passed.", level="INFO")
+        
         return data

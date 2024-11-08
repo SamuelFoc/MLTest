@@ -30,16 +30,24 @@ class ExportData(ExportComponent):
         """
         # Infer the file format from the save path
         file_type = self.save_to.split('.')[-1].lower()
+        self.log(f"Starting export of DataFrame to {self.save_to} (inferred format: {file_type}).", level="INFO")
 
         # Export based on the inferred file format
-        if file_type == 'csv':
-            data.write_csv(self.save_to)
-        elif file_type == 'pq':
-            data.write_parquet(self.save_to)
-        elif file_type == 'json':
-            data.write_json(self.save_to)
-        else:
-            raise ValueError(f"Unsupported file format '{file_type}'. Supported formats: csv, pq, json.")
+        try:
+            if file_type == 'csv':
+                data.write_csv(self.save_to)
+                self.log(f"Exported DataFrame to {self.save_to} as CSV.", level="INFO")
+            elif file_type == 'pq':
+                data.write_parquet(self.save_to)
+                self.log(f"Exported DataFrame to {self.save_to} as Parquet.", level="INFO")
+            elif file_type == 'json':
+                data.write_json(self.save_to)
+                self.log(f"Exported DataFrame to {self.save_to} as JSON.", level="INFO")
+            else:
+                raise ValueError(f"Unsupported file format '{file_type}'. Supported formats: csv, pq, json.")
+        except Exception as e:
+            self.log(f"Failed to export DataFrame to {self.save_to}: {e}", level="ERROR")
+            raise
 
 
 class ExportMany(MultiExportComponent):
@@ -69,17 +77,27 @@ class ExportMany(MultiExportComponent):
             ValueError: If the number of DataFrames does not match the number of save paths.
         """
         if len(data) != len(self.save_to):
-            raise ValueError("Number of DataFrames does not match the number of save paths.")
+            error_message = "Number of DataFrames does not match the number of save paths."
+            self.log(error_message, level="ERROR")
+            raise ValueError(error_message)
 
         for df, path in zip(data, self.save_to):
             file_type = path.split('.')[-1].lower()
+            self.log(f"Starting export of DataFrame to {path} (inferred format: {file_type}).", level="INFO")
 
             # Export based on the inferred file format
-            if file_type == 'csv':
-                df.write_csv(path)
-            elif file_type == 'pq':
-                df.write_parquet(path)
-            elif file_type == 'json':
-                df.write_json(path)
-            else:
-                raise ValueError(f"Unsupported file format '{file_type}' for path '{path}'. Supported formats: csv, pq, json.")
+            try:
+                if file_type == 'csv':
+                    df.write_csv(path)
+                    self.log(f"Exported DataFrame to {path} as CSV.", level="INFO")
+                elif file_type == 'pq':
+                    df.write_parquet(path)
+                    self.log(f"Exported DataFrame to {path} as Parquet.", level="INFO")
+                elif file_type == 'json':
+                    df.write_json(path)
+                    self.log(f"Exported DataFrame to {path} as JSON.", level="INFO")
+                else:
+                    raise ValueError(f"Unsupported file format '{file_type}' for path '{path}'. Supported formats: csv, pq, json.")
+            except Exception as e:
+                self.log(f"Failed to export DataFrame to {path}: {e}", level="ERROR")
+                raise

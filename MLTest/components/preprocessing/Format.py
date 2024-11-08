@@ -28,14 +28,23 @@ class FormatDate(FlowComponent):
         Returns:
         - DF: The modified DataFrame with parsed date columns.
         """
+        self.log(f"Starting date parsing for columns: {self.columns} with format: '{self.format}' and strict mode: {self.strict}.", level="INFO")
+        
         # Apply date parsing to each specified column
         for column in self.columns:
-            data = data.with_columns(
-                pl.col(column)
-                .str.strptime(pl.Date, format=self.format, strict=self.strict)
-                .alias(column)
-            )
-        
+            self.log(f"Parsing column '{column}' as a date.", level="INFO")
+            try:
+                data = data.with_columns(
+                    pl.col(column)
+                    .str.strptime(pl.Date, format=self.format, strict=self.strict)
+                    .alias(column)
+                )
+                self.log(f"Successfully parsed column '{column}'.", level="INFO")
+            except Exception as e:
+                self.log(f"Failed to parse column '{column}' as a date: {e}", level="ERROR")
+                raise
+
+        self.log("Date parsing completed.", level="INFO")
         return data
     
 
@@ -68,6 +77,8 @@ class GenerateTimeStamp(FlowComponent):
         Returns:
         - DF: The modified DataFrame with a new 'Datetime' column.
         """
+        self.log(f"Starting timestamp generation with format: '{self.format}'.", level="INFO")
+        
         # Mapping of format specifiers to required columns
         format_to_column = {
             "%Y": self.year_col,
@@ -80,6 +91,7 @@ class GenerateTimeStamp(FlowComponent):
 
         # Extract format specifiers from the format string
         used_specifiers = [specifier for specifier in format_to_column if specifier in self.format]
+        self.log(f"Using format specifiers: {used_specifiers}.", level="INFO")
 
         # Check if all required columns for the format are present
         missing_columns = [
@@ -87,30 +99,42 @@ class GenerateTimeStamp(FlowComponent):
         ]
 
         if missing_columns:
-            raise ValueError(
-                f"Format '{self.format}' requires the following missing columns: {', '.join(missing_columns)}"
-            )
+            error_message = f"Format '{self.format}' requires the following missing columns: {', '.join(missing_columns)}"
+            self.log(error_message, level="ERROR")
+            raise ValueError(error_message)
+
+        self.log("All required columns for the format are present.", level="INFO")
 
         # Prepare components for creating the datetime string
         components = []
         for specifier in used_specifiers:
             column = format_to_column[specifier]
             if column == self.time_col:
+                self.log(f"Processing time column '{column}'.", level="INFO")
                 components.append(pl.col(column).cast(pl.Utf8))  # Handle time parts
             else:
+                self.log(f"Processing column '{column}' with zero-padding.", level="INFO")
                 components.append(pl.col(column).cast(pl.Utf8).str.zfill(2))  # Handle year, month, day
 
         # Concatenate columns to create a datetime string
+        self.log("Concatenating columns to form a datetime string.", level="INFO")
         data = data.with_columns([
             pl.concat_str(components, separator="-").alias("Datetime_str")
         ])
 
         # Parse the concatenated datetime string into a proper Datetime column
-        data = data.with_columns([
-            pl.col("Datetime_str").str.strptime(pl.Datetime, format=self.format).alias("Datetime")
-        ])
+        self.log("Parsing the concatenated datetime string into a Datetime column.", level="INFO")
+        try:
+            data = data.with_columns([
+                pl.col("Datetime_str").str.strptime(pl.Datetime, format=self.format).alias("Datetime")
+            ])
+            self.log("Successfully generated the 'Datetime' column.", level="INFO")
+        except Exception as e:
+            self.log(f"Failed to parse datetime string: {e}", level="ERROR")
+            raise
 
         # Drop the intermediate datetime string column
         data = data.drop("Datetime_str")
+        self.log("Dropped the intermediate 'Datetime_str' column.", level="INFO")
 
         return data

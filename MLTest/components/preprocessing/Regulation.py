@@ -38,21 +38,34 @@ class MergeStorage(AggregatorComponent):
         Merges the provided dataframes based on the specified method during initialization.
 
         Parameters:
-        - dataframes (List[pl.DataFrame]): The list of dataframes to merge.
+        - data (List[pl.DataFrame]): The list of dataframes to merge.
 
         Returns:
         - pl.DataFrame: The merged dataframe.
         """
-        # Ensure that all elements in `dataframes` are of type `pl.DataFrame`
+        self.log(f"Starting merge operation with method '{self.how}' and key '{self.on}' (if applicable).", level="INFO")
+        
+        # Ensure that all elements in `data` are of type `pl.DataFrame`
         if not all(isinstance(df, DF) for df in data):
-            raise TypeError("All items in `data` must be Polars DataFrame instances.")
+            error_message = "All items in `data` must be Polars DataFrame instances."
+            self.log(error_message, level="ERROR")
+            raise TypeError(error_message)
 
-        if self.how == "concat":
-            # Concatenate dataframes vertically (stack them)
-            return pl.concat(data)
-        else:
-            # Perform the join on the specified key
-            result = data[0]
-            for df in data[1:]:
-                result = result.join(df, on=self.on, how=self.how)
+        try:
+            if self.how == "concat":
+                # Concatenate dataframes vertically (stack them)
+                self.log("Performing vertical concatenation of dataframes.", level="INFO")
+                result = pl.concat(data)
+                self.log("Concatenation completed successfully.", level="INFO")
+            else:
+                # Perform the join on the specified key
+                self.log(f"Performing join operation with key '{self.on}' using '{self.how}' method.", level="INFO")
+                result = data[0]
+                for i, df in enumerate(data[1:], start=1):
+                    self.log(f"Joining DataFrame {i} on column '{self.on}' using '{self.how}' method.", level="INFO")
+                    result = result.join(df, on=self.on, how=self.how)
+                self.log("Join operation completed successfully.", level="INFO")
             return result
+        except Exception as e:
+            self.log(f"Merge operation failed: {e}", level="ERROR")
+            raise

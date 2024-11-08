@@ -36,7 +36,28 @@ class UseFloatingStorage(FlowComponent):
         Returns:
             DF: Aggregated DataFrame from the results of all components.
         """
-        results = [component.use(data) for component in self.components]
-        self.storage = results
+        self.log("Starting UseFloatingStorage execution.", level="INFO")
+        results = []
 
-        return self.aggregator.use(results)
+        for i, component in enumerate(self.components):
+            self.log(f"Executing component {i+1}/{len(self.components)}: {component.__class__.__name__}.", level="INFO")
+            try:
+                result = component.use(data)
+                results.append(result)
+                self.log(f"Component {i+1}/{len(self.components)} executed successfully.", level="INFO")
+            except Exception as e:
+                self.log(f"Component {i+1}/{len(self.components)} failed with error: {e}.", level="ERROR")
+                raise
+
+        self.storage = results
+        self.log("All components executed. Passing results to the aggregator.", level="INFO")
+
+        try:
+            aggregated_result = self.aggregator.use(results)
+            self.log("Aggregator executed successfully.", level="INFO")
+        except Exception as e:
+            self.log(f"Aggregator failed with error: {e}.", level="ERROR")
+            raise
+
+        self.log("UseFloatingStorage execution completed.", level="INFO")
+        return aggregated_result

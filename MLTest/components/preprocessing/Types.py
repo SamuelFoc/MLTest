@@ -25,14 +25,20 @@ class CastTypes(FlowComponent):
         Returns:
         - DF: The modified DataFrame with columns cast to specified types.
         """
-        transformations = [
-            pl.col(column).cast(dtype).alias(column)
-            for column, dtype in self.columns_and_types.items()
-        ]
-        
-        # Apply transformations to the DataFrame
-        data = data.with_columns(transformations)
-        
+        self.log(f"Starting type casting for columns: {self.columns_and_types}.", level="INFO")
+
+        transformations = []
+        for column, dtype in self.columns_and_types.items():
+            self.log(f"Casting column '{column}' to type '{dtype}'.", level="INFO")
+            transformations.append(pl.col(column).cast(dtype).alias(column))
+
+        try:
+            data = data.with_columns(transformations)
+            self.log("Type casting completed successfully.", level="INFO")
+        except Exception as e:
+            self.log(f"Failed to cast types: {e}", level="ERROR")
+            raise
+
         return data
     
 
@@ -62,22 +68,33 @@ class HandleNullValues(FlowComponent):
         - DF: The modified DataFrame with nulls replaced if return_null_columns is False;
             otherwise, a DataFrame containing column names with null values.
         """
+        self.log("Checking for null values in the DataFrame.", level="INFO")
+
         # Get columns with null values
         null_columns = [col for col in data.columns if data.select(pl.col(col).is_null().any()).to_numpy()[0][0]]
-        
+        self.log(f"Columns with null values: {null_columns}.", level="INFO")
+
         if self.return_null_columns:
-            # Return a DataFrame with the column names that have null values
+            self.log("Returning columns with null values as a DataFrame.", level="INFO")
             return pl.DataFrame({"null_columns": null_columns})
-        
+
+        self.log(f"Filling null values using fill_values: {self.fill_values}.", level="INFO")
+
         # Replace null values based on the specified fill_values
-        transformations = [
-            pl.col(column).fill_null(self.fill_values.get(data.schema[column], None)).alias(column)
-            for column in data.columns
-            if column in null_columns and data.schema[column] in self.fill_values
-        ]
-        
-        # Apply transformations to the DataFrame
-        return data.with_columns(transformations) if transformations else data
+        transformations = []
+        for column in null_columns:
+            dtype = data.schema[column]
+            if dtype in self.fill_values:
+                self.log(f"Filling nulls in column '{column}' with value '{self.fill_values[dtype]}'.", level="INFO")
+                transformations.append(
+                    pl.col(column).fill_null(self.fill_values[dtype]).alias(column)
+                )
+
+        try:
+            return data.with_columns(transformations) if transformations else data
+        except Exception as e:
+            self.log(f"Failed to handle null values: {e}", level="ERROR")
+            raise
     
 
 class HandleIndividualNullColumns(FlowComponent):
@@ -97,7 +114,7 @@ class HandleIndividualNullColumns(FlowComponent):
             raise ValueError("column_specific_fill cannot be empty.")
         self.column_specific_fill = column_specific_fill
 
-    def use(self, dataframe: DF) -> DF:
+    def use(self, data: DF) -> DF:
         """
         Fills null values in the specified columns based on column-specific rules.
 
@@ -107,17 +124,26 @@ class HandleIndividualNullColumns(FlowComponent):
         Returns:
         - DF: The modified DataFrame with nulls filled in specified columns.
         """
+        self.log(f"Starting null handling with specific rules: {self.column_specific_fill}.", level="INFO")
+
         transformations = []
 
         # Apply column-specific fills
         for columns, fill_value in self.column_specific_fill.items():
             for column in columns:
-                if column in dataframe.columns:
+                if column in data.columns:
+                    self.log(f"Filling nulls in column '{column}' with value '{fill_value}'.", level="INFO")
                     transformations.append(
                         pl.col(column).fill_null(fill_value).alias(column)
                     )
+                else:
+                    self.log(f"Column '{column}' not found in DataFrame. Skipping.", level="WARNING")
 
-        # Apply transformations to the DataFrame
-        dataframe = dataframe.with_columns(transformations) if transformations else dataframe
+        try:
+            data = data.with_columns(transformations) if transformations else data
+            self.log("Null handling completed successfully.", level="INFO")
+        except Exception as e:
+            self.log(f"Failed to handle nulls: {e}", level="ERROR")
+            raise
 
-        return dataframe
+        return data

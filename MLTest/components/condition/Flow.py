@@ -1,4 +1,4 @@
-from MLTest.interfaces.Components import FlowComponent, Component
+from MLTest.interfaces.Components import FlowComponent
 from MLTest.interfaces.Typing import DF
 from typing import Callable
 
@@ -32,7 +32,10 @@ class UseConditionalFlow(FlowComponent):
         Returns:
             DF: The result of the true_component or false_component based on the condition.
         """
+        self.log("Evaluating the condition on the input DataFrame.", level="INFO")
         if self.condition(data):
+            self.log("Condition evaluated to True. Executing the true_component.", level="INFO")
             return self.true_component.use(data)
         else:
+            self.log("Condition evaluated to False. Executing the false_component.", level="INFO")
             return self.false_component.use(data)

@@ -25,31 +25,38 @@ class ReplaceStringPattern(FlowComponent):
         Applies a regex or string replacement on specified columns.
         
         Parameters:
-        - dataframe (DF): The Polars DataFrame to process.
+        - data (DF): The Polars DataFrame to process.
         
         Returns:
         - DF: The modified DataFrame with replacements applied.
         """
-        # Determine replacement method based on is_regex flag
+        self.log(f"Starting replacement in columns {self.columns} using pattern '{self.pattern}' "
+                 f"with replacement '{self.replace}' (is_regex={self.is_regex}).", level="INFO")
+
         transformations = []
         for column in self.columns:
             if self.is_regex:
+                self.log(f"Applying regex replacement in column '{column}'.", level="INFO")
                 transformations.append(
                     pl.col(column)
                     .str.replace_all(self.pattern, self.replace)
                     .alias(column)
                 )
             else:
-                # If not regex, use literal string replacement
+                self.log(f"Applying literal string replacement in column '{column}'.", level="INFO")
                 transformations.append(
                     pl.col(column)
                     .str.replace(self.pattern, self.replace, literal=True)
                     .alias(column)
                 )
 
-        # Apply transformations to the DataFrame
-        data = data.with_columns(transformations)
-        
+        try:
+            data = data.with_columns(transformations)
+            self.log("Replacement operation completed successfully.", level="INFO")
+        except Exception as e:
+            self.log(f"Failed to apply replacements: {e}", level="ERROR")
+            raise
+
         return data
     
 
@@ -75,7 +82,7 @@ class BinaryReplace(FlowComponent):
             raise ValueError("Replacement rules cannot be empty.")
         self.replacement = replacement
 
-    def use(self, dataframe: DF) -> DF:
+    def use(self, data: DF) -> DF:
         """
         Replaces values in specified binary categorical columns based on the replacement rules.
 
@@ -85,19 +92,33 @@ class BinaryReplace(FlowComponent):
         Returns:
         - DF: The modified DataFrame with replaced values.
         """
+        self.log("Starting binary replacement operation.", level="INFO")
         transformations = []
 
-        # Apply replacement rules
         for column, mapping in self.replacement.items():
-            if column in dataframe.columns:
-                # Create a transformation using `when-then-otherwise` for replacements
-                transformation = pl.col(column)
-                for old_value, new_value in mapping.items():
-                    transformation = transformation.when(pl.lit(old_value)).then(new_value)
-                transformation = transformation.otherwise(pl.col(column)).alias(column)
-                transformations.append(transformation)
+            if column in data.columns:
+                self.log(f"Applying replacements in column '{column}' with mapping: {mapping}.", level="INFO")
+                try:
+                    # Create a transformation using `when-then-otherwise` for replacements
+                    transformation = pl.col(column)
+                    for old_value, new_value in mapping.items():
+                        transformation = transformation.when(pl.lit(old_value)).then(new_value)
+                    transformation = transformation.otherwise(pl.col(column)).alias(column)
+                    transformations.append(transformation)
+                except Exception as e:
+                    self.log(f"Failed to apply replacements in column '{column}': {e}", level="ERROR")
+                    raise
+            else:
+                self.log(f"Column '{column}' not found in DataFrame. Skipping replacement for this column.", level="WARNING")
 
-        # Apply transformations to the DataFrame
-        dataframe = dataframe.with_columns(transformations) if transformations else dataframe
+        if transformations:
+            try:
+                data = data.with_columns(transformations)
+                self.log("Binary replacement operation completed successfully.", level="INFO")
+            except Exception as e:
+                self.log(f"Failed to apply transformations: {e}", level="ERROR")
+                raise
+        else:
+            self.log("No valid transformations were applied. Returning original DataFrame.", level="WARNING")
 
-        return dataframe
+        return data
