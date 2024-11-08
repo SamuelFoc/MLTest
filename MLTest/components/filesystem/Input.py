@@ -8,15 +8,6 @@ class LoadData(ImportComponent):
     Component for loading data from a specified file path into a Polars DataFrame.
     Supports CSV, Parquet (pq), and JSON file formats.
     """
-    def __init__(self, src: str):
-        """
-        Initialize the LoadData component with the source file path.
-
-        Args:
-            src (str): The path to the data file.
-        """
-        self.src = src
-
     def use(self) -> DF:
         """
         Reads data from the specified file and returns it as a Polars DataFrame.
@@ -27,6 +18,7 @@ class LoadData(ImportComponent):
         Raises:
             ValueError: If the file type is unsupported.
         """
+        self.log(message="Loading data..")
         # Infer the file type from the file extension
         file_type = self.src.split('.')[-1].lower()
 

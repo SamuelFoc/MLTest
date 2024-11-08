@@ -8,13 +8,14 @@ class StoreInputs(Component):
     Component that accepts a list of Components and returns a list of results
     after applying each component's `use` method.
     """
-    def __init__(self, components: List[ImportComponent]):
+    def __init__(self, components: List[ImportComponent], log: bool = False):
         """
         Initialize with a list of components to store.
 
         Args:
             components (List[ImportComponent]): A list of import components to be stored and executed.
         """
+        super().__init__(log)
         self.components = components
         self.storage = []
 
@@ -37,7 +38,7 @@ class StoreAndAggregateInputs(Component):
     It applies each component's `use` method, passes the collected results
     to the aggregator, and returns a DataFrame.
     """
-    def __init__(self, components: List[Component], aggregator: AggregatorComponent):
+    def __init__(self, components: List[Component], aggregator: AggregatorComponent, log: bool = False):
         """
         Initialize with a list of components to store and aggregator component.
 
@@ -46,6 +47,7 @@ class StoreAndAggregateInputs(Component):
             aggregator (Component): A component that accepts a list of results
                                     and returns a DataFrame.
         """
+        super().__init__(log)
         self.components = components
         self.aggregator = aggregator
         self.storage = None

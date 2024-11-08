@@ -4,7 +4,7 @@ import polars as pl
 
 
 class ReplaceStringPattern(FlowComponent):
-    def __init__(self, columns: list[str], pattern: str, replace: str, is_regex: bool = True):
+    def __init__(self, columns: list[str], pattern: str, replace: str, is_regex: bool = True, log: bool = False):
         """
         Initializes the RegexReplace component.
         
@@ -14,6 +14,7 @@ class ReplaceStringPattern(FlowComponent):
         - replace (str): The replacement string.
         - is_regex (bool): Whether the pattern is a regex pattern (True) or a literal string (False).
         """
+        super().__init__(log)
         self.columns = columns
         self.pattern = pattern
         self.replace = replace
@@ -56,7 +57,7 @@ class BinaryReplace(FlowComponent):
     """
     A FlowComponent for replacing binary categorical column values based on predefined mappings.
     """
-    def __init__(self, replacement: dict[str, dict[any, any]]):
+    def __init__(self, replacement: dict[str, dict[any, any]], log: bool = False):
         """
         Initializes the BinaryReplace component with the specified replacement rules.
 
@@ -69,6 +70,7 @@ class BinaryReplace(FlowComponent):
                 "LikesTea": {"Y": "Yes", "N": "No"}
             }
         """
+        super().__init__(log)
         if not replacement:
             raise ValueError("Replacement rules cannot be empty.")
         self.replacement = replacement

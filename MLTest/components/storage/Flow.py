@@ -9,7 +9,7 @@ class UseFloatingStorage(FlowComponent):
     It applies each component's `use` method, collects the results, and passes 
     them to the aggregator component to produce a combined DataFrame.
     """
-    def __init__(self, components: List[FlowComponent], aggregator: AggregatorComponent):
+    def __init__(self, components: List[FlowComponent], aggregator: AggregatorComponent, log: bool = False):
         """
         Initialize the UseFloatingStorage component with a list of components 
         and an aggregator.
@@ -19,6 +19,7 @@ class UseFloatingStorage(FlowComponent):
             aggregator (AggregatorComponent): A component that accepts a list of 
                                               results and returns a combined DataFrame.
         """ 
+        super().__init__(log)
         self.components = components
         self.aggregator = aggregator
         self.storage = []

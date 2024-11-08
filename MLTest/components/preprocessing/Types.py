@@ -4,7 +4,7 @@ import polars as pl
 
 
 class CastTypes(FlowComponent):
-    def __init__(self, columns_and_types: dict[str, pl.DataType]):
+    def __init__(self, columns_and_types: dict[str, pl.DataType], log: bool = False):
         """
         Initializes the TypeCasting component.
         
@@ -12,6 +12,7 @@ class CastTypes(FlowComponent):
         - columns_and_types (dict[str, pl.DataType]): A dictionary where keys are column names,
           and values are the target Polars data types (e.g., pl.Utf8, pl.Float64, pl.Int64).
         """
+        super().__init__(log)
         self.columns_and_types = columns_and_types
 
     def use(self, data: DF) -> DF:
@@ -36,7 +37,7 @@ class CastTypes(FlowComponent):
     
 
 class HandleNullValues(FlowComponent):
-    def __init__(self, fill_values: dict[pl.DataType, any] = None, return_null_columns: bool = False):
+    def __init__(self, fill_values: dict[pl.DataType, any] = None, return_null_columns: bool = False, log: bool = False):
         """
         Initializes the NullHandler component.
         
@@ -45,6 +46,7 @@ class HandleNullValues(FlowComponent):
           (e.g., pl.Int64, pl.Float64, pl.Utf8), and values are the default values to replace nulls.
         - return_null_columns (bool): If True, returns the names of columns containing null values.
         """
+        super().__init__(log)
         self.fill_values = fill_values or {}
         self.return_null_columns = return_null_columns
 
@@ -82,7 +84,7 @@ class HandleIndividualNullColumns(FlowComponent):
     """
     A FlowComponent for filling null values in specific columns based on user-defined rules.
     """
-    def __init__(self, column_specific_fill: dict[frozenset, any]):
+    def __init__(self, column_specific_fill: dict[frozenset, any], log: bool = False):
         """
         Initializes the NullFiller with specific column fill values.
 
@@ -90,6 +92,7 @@ class HandleIndividualNullColumns(FlowComponent):
         - column_specific_fill (dict[frozenset, any]): A dictionary where each key is a frozenset
           of column names, and the value is the fill value for those specific columns.
         """
+        super().__init__(log)
         if not column_specific_fill:
             raise ValueError("column_specific_fill cannot be empty.")
         self.column_specific_fill = column_specific_fill

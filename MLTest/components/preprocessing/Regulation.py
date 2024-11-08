@@ -8,7 +8,7 @@ class MergeStorage(AggregatorComponent):
     """
     A component that accepts an array of dataframes and merges them into a single dataframe.
     """
-    def __init__(self, how: str = "concat", on = None):
+    def __init__(self, how: str = "concat", on = None, log:bool = False):
         """
         Initializes the MergeStorage component.
 
@@ -17,6 +17,7 @@ class MergeStorage(AggregatorComponent):
                      "join-inner", "join-outer", "join-left", or "join-right" for joins.
         - on (Optional[str]): The column name to join on (required if `how` is one of the join methods).
         """
+        super().__init__(log)
         # Validate the `how` parameter
         if how == "concat":
             self.how = "concat"

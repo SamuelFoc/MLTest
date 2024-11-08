@@ -4,7 +4,7 @@ import polars as pl
 
 
 class FormatDate(FlowComponent):
-    def __init__(self, columns: list[str], format: str, strict: bool = False):
+    def __init__(self, columns: list[str], format: str, strict: bool = False, log: bool = False):
         """
         Initializes the DateParsingComponent.
         
@@ -13,6 +13,7 @@ class FormatDate(FlowComponent):
         - format (str): The date format to use for parsing (e.g., "%m/%Y").
         - strict (bool): Whether to enforce strict date parsing. Defaults to False.
         """
+        super().__init__(log)
         self.columns = columns
         self.format = format
         self.strict = strict
@@ -39,7 +40,7 @@ class FormatDate(FlowComponent):
     
 
 class GenerateTimeStamp(FlowComponent):
-    def __init__(self, format: str, year_col: str = "Year", month_col: str = "Month", day_col: str = "Day", time_col: str = "Time"):
+    def __init__(self, format: str, year_col: str = "Year", month_col: str = "Month", day_col: str = "Day", time_col: str = "Time", log: bool = False):
         """
         Initializes the GenerateTimeStamp component.
 
@@ -50,6 +51,7 @@ class GenerateTimeStamp(FlowComponent):
         - day_col (str): Name of the column containing the day (optional).
         - time_col (str): Name of the column containing the time (optional).
         """
+        super().__init__(log)
         self.year_col = year_col
         self.month_col = month_col
         self.day_col = day_col

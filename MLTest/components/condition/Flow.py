@@ -8,7 +8,7 @@ class UseConditionalFlow(FlowComponent):
     A component that evaluates a condition and chooses a path based on the result.
     Holds references to components for both true and false outcomes.
     """
-    def __init__(self, condition: Callable[[DF], bool], true_component: FlowComponent, false_component: FlowComponent):
+    def __init__(self, condition: Callable[[DF], bool], true_component: FlowComponent, false_component: FlowComponent, log: bool = False):
         """
         Initialize the ConditionalComponent with a condition and two components for conditional execution.
 
@@ -17,6 +17,7 @@ class UseConditionalFlow(FlowComponent):
             true_component (Component): The component to execute if the condition is True.
             false_component (Component): The component to execute if the condition is False.
         """
+        super().__init__(log)
         self.condition = condition
         self.true_component = true_component
         self.false_component = false_component
