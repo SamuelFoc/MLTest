@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from MLTest.interfaces.Typing import DF
+from typing import List
+
 
 class Component(ABC):
     """
@@ -59,7 +61,25 @@ class FlowComponent(Component):
             DF: The processed Polars DataFrame.
         """
         pass
-    
+
+
+class AggregatorComponent(Component):
+    """
+    Interface for aggregator components that accept a list of results (DFs) and return a Polars DataFrame.
+    """
+    @abstractmethod
+    def use(self, results: List[DF]) -> DF:
+        """
+        Aggregate a list of results and return a single Polars DataFrame.
+
+        Args:
+            results (List[DF]): A list of results in DataFrames to be aggregated into a single DataFrame.
+        
+        Returns:
+            DF: A Polars DataFrame representing the aggregated data.
+        """
+        pass
+
 
 class ExportComponent(Component):
     """
@@ -85,3 +105,34 @@ class ExportComponent(Component):
             data (DF): The Polars DataFrame to be exported.
         """
         pass
+
+
+class MultiExportComponent(Component):
+    """
+    Export component that accepts a Polars DataFrame and can export it to any specified format.
+    Requires a `export_to` parameter during initialization.
+    """
+    @abstractmethod
+    def __init__(self, export_to: str):
+        """
+        Initialize the ExportComponent with an export_to parameter.
+        
+        Args:
+            export_to (str): The source or format to which the data will be exported.
+        """
+        self.export_to = export_to
+
+    @abstractmethod
+    def use(self, data: List[DF]) -> None:
+        """
+        Export the provided Polars DataFrame to the desired destination or format.
+        
+        Args:
+            data (List[DF]): A List of the Polars DataFrames to be exported.
+        """
+        pass
+
+
+
+        
+
