@@ -49,7 +49,8 @@ class FormatDate(FlowComponent):
     
 
 class GenerateTimeStamp(FlowComponent):
-    def __init__(self, format: str, year_col: str = "Year", month_col: str = "Month", day_col: str = "Day", time_col: str = "Time", log: bool = False):
+    def __init__(self, format: str, year_col: str = "Year", month_col: str = "Month", day_col: str = "Day",
+                 hour_col: str = "Hour", minute_col: str = "Minute", second_col: str = "Second", log: bool = False):
         """
         Initializes the GenerateTimeStamp component.
 
@@ -58,18 +59,22 @@ class GenerateTimeStamp(FlowComponent):
         - year_col (str): Name of the column containing the year.
         - month_col (str): Name of the column containing the month (optional).
         - day_col (str): Name of the column containing the day (optional).
-        - time_col (str): Name of the column containing the time (optional).
+        - hour_col (str): Name of the column containing the hour (optional).
+        - minute_col (str): Name of the column containing the minute (optional).
+        - second_col (str): Name of the column containing the second (optional).
         """
         super().__init__(log)
         self.year_col = year_col
         self.month_col = month_col
         self.day_col = day_col
-        self.time_col = time_col
+        self.hour_col = hour_col
+        self.minute_col = minute_col
+        self.second_col = second_col
         self.format = format
 
     def use(self, data: DF) -> DF:
         """
-        Validates and generates a timestamp column using the provided year, month, day, and time columns.
+        Validates and generates a timestamp column using the provided year, month, day, hour, minute, and second columns.
 
         Parameters:
         - data (DF): The Polars DataFrame to process.
@@ -84,9 +89,9 @@ class GenerateTimeStamp(FlowComponent):
             "%Y": self.year_col,
             "%m": self.month_col,
             "%d": self.day_col,
-            "%H": self.time_col,
-            "%M": self.time_col,
-            "%S": self.time_col
+            "%H": self.hour_col,
+            "%M": self.minute_col,
+            "%S": self.second_col
         }
 
         # Extract format specifiers from the format string
@@ -109,12 +114,8 @@ class GenerateTimeStamp(FlowComponent):
         components = []
         for specifier in used_specifiers:
             column = format_to_column[specifier]
-            if column == self.time_col:
-                self.log(f"Processing time column '{column}'.", level="INFO")
-                components.append(pl.col(column).cast(pl.Utf8))  # Handle time parts
-            else:
-                self.log(f"Processing column '{column}' with zero-padding.", level="INFO")
-                components.append(pl.col(column).cast(pl.Utf8).str.zfill(2))  # Handle year, month, day
+            self.log(f"Processing column '{column}' with zero-padding if necessary.", level="INFO")
+            components.append(pl.col(column).cast(pl.Utf8).str.zfill(2))  # Ensure zero-padding for all parts
 
         # Concatenate columns to create a datetime string
         self.log("Concatenating columns to form a datetime string.", level="INFO")
@@ -137,4 +138,66 @@ class GenerateTimeStamp(FlowComponent):
         data = data.drop("Datetime_str")
         self.log("Dropped the intermediate 'Datetime_str' column.", level="INFO")
 
+        return data
+
+
+class SplitTimeColumn(FlowComponent):
+    def __init__(self, time_col: str, time_format: str = "%H:%M:%S", log: bool = False):
+        """
+        Initializes the SplitTimeColumn component.
+
+        Parameters:
+        - time_col (str): Name of the column containing the time string.
+        - time_format (str): Format of the time string in the column. Default is "%H:%M:%S".
+                            Examples:
+                              - "%H:%M" for hours and minutes only.
+                              - "%H:%M:%S" for hours, minutes, and seconds.
+        """
+        super().__init__(log)
+        self.time_col = time_col
+        self.time_format = time_format
+
+    def use(self, data: DF) -> DF:
+        """
+        Splits the time column into Hour, Minute, and Second columns based on the provided format.
+
+        Parameters:
+        - data (DF): The Polars DataFrame to process.
+
+        Returns:
+        - DF: The modified DataFrame with 'Hour', 'Minute', and optionally 'Second' columns added.
+        """
+        self.log(f"Starting to split time column '{self.time_col}' using format '{self.time_format}'.", level="INFO")
+
+        # Check if the specified time column exists in the DataFrame
+        if self.time_col not in data.columns:
+            error_message = f"Column '{self.time_col}' not found in the DataFrame."
+            self.log(error_message, level="ERROR")
+            raise ValueError(error_message)
+
+        # Identify format specifiers in the time format
+        specifiers = {"%H": "Hour", "%M": "Minute", "%S": "Second"}
+        used_specifiers = [specifier for specifier in specifiers if specifier in self.time_format]
+
+        self.log(f"Extracting components based on specifiers: {used_specifiers}.", level="INFO")
+
+        # Split the time column into components
+        new_columns = {}
+        for specifier in used_specifiers:
+            component_name = specifiers[specifier]
+            self.log(f"Extracting '{component_name}' from '{self.time_col}' using specifier '{specifier}'.", level="INFO")
+            
+            # Extract the component using the time format and cast to integer
+            new_columns[component_name] = (
+                pl.col(self.time_col)
+                .str.strptime(pl.Time, format=self.time_format)  # Parse the time string
+                .dt.strftime(specifier)  # Extract the specific component
+                .cast(pl.Int64)  # Cast to integer
+            )
+
+        # Add new columns to the DataFrame
+        self.log("Adding extracted time components to the DataFrame.", level="INFO")
+        data = data.with_columns([col.alias(name) for name, col in new_columns.items()])
+
+        self.log(f"Successfully created columns: {list(new_columns.keys())}.", level="INFO")
         return data
