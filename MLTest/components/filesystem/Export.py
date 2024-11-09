@@ -8,14 +8,6 @@ class ExportData(ExportComponent):
     Component for exporting a single DataFrame to a specified file path.
     Supports CSV, Parquet (pq), and JSON formats.
     """
-    def __init__(self, save_to: str):
-        """
-        Initialize the ExportData component with the destination file path.
-
-        Args:
-            save_to (str): The path where the data will be saved.
-        """
-        self.save_to = save_to
 
     def use(self, data: DF) -> None:
         """
@@ -29,24 +21,24 @@ class ExportData(ExportComponent):
             ValueError: If the file format is unsupported.
         """
         # Infer the file format from the save path
-        file_type = self.save_to.split('.')[-1].lower()
-        self.log(f"Starting export of DataFrame to {self.save_to} (inferred format: {file_type}).", level="INFO")
+        file_type = self.export_to.split('.')[-1].lower()
+        self.log(f"Starting export of DataFrame to {self.export_to} (inferred format: {file_type}).", level="INFO")
 
         # Export based on the inferred file format
         try:
             if file_type == 'csv':
-                data.write_csv(self.save_to)
-                self.log(f"Exported DataFrame to {self.save_to} as CSV.", level="INFO")
+                data.write_csv(self.export_to)
+                self.log(f"Exported DataFrame to {self.export_to} as CSV.", level="INFO")
             elif file_type == 'pq':
-                data.write_parquet(self.save_to)
-                self.log(f"Exported DataFrame to {self.save_to} as Parquet.", level="INFO")
+                data.write_parquet(self.export_to)
+                self.log(f"Exported DataFrame to {self.export_to} as Parquet.", level="INFO")
             elif file_type == 'json':
-                data.write_json(self.save_to)
-                self.log(f"Exported DataFrame to {self.save_to} as JSON.", level="INFO")
+                data.write_json(self.export_to)
+                self.log(f"Exported DataFrame to {self.export_to} as JSON.", level="INFO")
             else:
                 raise ValueError(f"Unsupported file format '{file_type}'. Supported formats: csv, pq, json.")
         except Exception as e:
-            self.log(f"Failed to export DataFrame to {self.save_to}: {e}", level="ERROR")
+            self.log(f"Failed to export DataFrame to {self.export_to}: {e}", level="ERROR")
             raise
 
 
