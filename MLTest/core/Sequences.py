@@ -1,51 +1,71 @@
-import importlib.util
-import os
+from MLTest.core.Pipelines import LoadingPipe, FlowThroughPipe, ExportPipe
+from typing import List, Any
 
 
 class Sequence:
-    def __init__(self, pipelines):
+    def __init__(self, name: str, pipelines: List[Any], args: List[dict], log: bool = False):
         """
-        Initialize with a list of pipeline instances or classes.
-        Each pipeline should have a `run` method.
+        Initializes the Sequence.
+
+        Parameters:
+        - name: Name of the sequence.
+        - pipelines: List of pipeline classes.
+        - args: List of dictionaries containing arguments for each pipeline.
+        - log: If True, enable logging for all pipelines (default: False).
         """
-        self.pipelines = pipelines
+        if len(pipelines) != len(args):
+            raise ValueError(
+                "The number of pipelines must match the number of argument dictionaries."
+            )
+
+        self.name = name
+        self.pipelines = [
+            self._instantiate_pipeline(pipeline_class, pipeline_args, log)
+            for pipeline_class, pipeline_args in zip(pipelines, args)
+        ]
+
+    def _instantiate_pipeline(self, pipeline_class: Any, pipeline_args: dict, log: bool):
+        """
+        Instantiate a pipeline with logging settings applied.
+
+        Parameters:
+        - pipeline_class: The pipeline class to instantiate.
+        - pipeline_args: Arguments to pass to the pipeline class.
+        - log: Global logging setting.
+
+        Returns:
+        - An instantiated pipeline object.
+        """
+        # Add 'log' to arguments if it's not already specified
+        if "log" not in pipeline_args:
+            pipeline_args["log"] = log
+        return pipeline_class(**pipeline_args)
 
     def run(self, data=None):
         """
-        Run each pipeline in sequence, passing the output of one as the input to the next.
-        :param data: Optional initial data to pass to the first pipeline.
-        :return: Final output after all pipelines have been run.
+        Execute the sequence of pipelines.
+
+        Parameters:
+        - data: Initial data for the sequence (if required by the first pipeline).
+
+        Returns:
+        - Final processed data or None, depending on the pipeline type.
         """
+        current_data = data
         for pipeline in self.pipelines:
-            if data is not None:
-                data = pipeline.run(data)
+            # Determine pipeline type and run appropriately
+            if isinstance(pipeline, FlowThroughPipe):
+                if current_data is None:
+                    raise ValueError("FlowThroughPipe requires input data, but none was provided.")
+                current_data = pipeline.run(current_data)
+            elif isinstance(pipeline, LoadingPipe):
+                current_data = pipeline.run()  # No input required
+            elif isinstance(pipeline, ExportPipe):
+                if current_data is None:
+                    raise ValueError("ExportPipe requires input data, but none was provided.")
+                pipeline.run(current_data)  # No output expected
+                current_data = None  # Reset current_data after export
             else:
-                data = pipeline.run()
-        return data
-    
-class SequenceLoader:
-    def __init__(self, folder_path="sequences"):
-        self.folder_path = folder_path
+                raise TypeError(f"Unknown pipeline type: {type(pipeline)}")
 
-    def load_sequence(self, filename):
-        """Dynamically loads a pipeline from a file and creates a runnable class."""
-        file_path = os.path.join(self.folder_path, filename + ".py")
-        module_name = os.path.splitext(filename)[0]
-
-        spec = importlib.util.spec_from_file_location(module_name, file_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-
-        # Expect the module to have a 'PIPELINE' attribute defined as a FlowPipe instance
-        if hasattr(module, "SEQUENCE"):
-            sequence = module.SEQUENCE
-
-            # Define a new class dynamically
-            class DynamicSequence:
-                @classmethod
-                def run(cls, input=None):
-                    return sequence.run(input)
-            
-            return DynamicSequence
-        else:
-            raise ValueError(f"{filename} does not contain a valid 'PIPELINE' definition.")
+        return current_data
